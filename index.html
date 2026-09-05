@@ -405,7 +405,7 @@ function select(id, source){
 
   document.querySelectorAll('.rankrow').forEach(row=>row.classList.toggle('active', +row.dataset.id===id));
 
-  if(source !== 'map') map.flyToBounds(boundsById[id].pad(0.6), { maxZoom: 14, duration: 0.7 });
+  map.flyToBounds(boundsById[id].pad(0.6), { maxZoom: 14, duration: 0.7 });
   if(source !== 'list') focusListRow(id);
 
   const hzShare = r.hz + r.sf > 0 ? (r.hz/(r.hz+r.sf))*100 : 50;
