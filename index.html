@@ -291,7 +291,7 @@ const satelliteLayer = L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloud
 
 // get a free key at https://carto.com/basemaps/apikey and paste it below to enable this layer
 const CARTO_API_KEY = 'cb1_2y1z_1_6949465932d7bef65de7598a';
-const streetsLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${CARTO_API_KEY ? '?api_key=' + CARTO_API_KEY : ''}`, {
+const streetsLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${CARTO_API_KEY ? '?key=' + CARTO_API_KEY : ''}`, {
   subdomains: 'abcd',
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
@@ -302,6 +302,15 @@ L.control.layers({
   'Satellite (cloud-free)': satelliteLayer,
   'Streets': streetsLayer,
 }, null, { position: 'topright', collapsed: false }).addTo(map);
+
+// Terrain is one static image stretched over the whole area (~45m/px) -
+// zooming a segment in past what that can render sharply just looks
+// blurry, so cap the auto-zoom lower for it than for the real tile layers.
+let activeBaseLayer = 'terrain';
+map.on('baselayerchange', (e)=>{
+  activeBaseLayer = e.layer === terrainLayer ? 'terrain' : e.layer === satelliteLayer ? 'satellite' : 'streets';
+});
+function segmentZoomCap(){ return activeBaseLayer === 'terrain' ? 12 : 15; }
 
 document.getElementById('zin').addEventListener('click', ()=>map.zoomIn());
 document.getElementById('zout').addEventListener('click', ()=>map.zoomOut());
@@ -405,7 +414,7 @@ function select(id, source){
 
   document.querySelectorAll('.rankrow').forEach(row=>row.classList.toggle('active', +row.dataset.id===id));
 
-  map.flyToBounds(boundsById[id].pad(0.6), { maxZoom: 14, duration: 0.7 });
+  map.flyToBounds(boundsById[id].pad(0.6), { maxZoom: segmentZoomCap(), duration: 0.7 });
   if(source !== 'list') focusListRow(id);
 
   const hzShare = r.hz + r.sf > 0 ? (r.hz/(r.hz+r.sf))*100 : 50;
