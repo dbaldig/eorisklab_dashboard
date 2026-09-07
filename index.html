@@ -88,7 +88,7 @@ a{color:var(--accent)}
 .mapctrls button{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(18,16,12,.9);backdrop-filter:blur(6px);color:#efe9db;font-size:16px;cursor:pointer;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .mapctrls button:hover{background:rgba(18,16,12,1)}
 
-.themebtn{position:absolute;top:20px;right:20px;z-index:1000;width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(18,16,12,.9);backdrop-filter:blur(6px);color:#efe9db;cursor:pointer;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.themebtn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(18,16,12,.9);backdrop-filter:blur(6px);color:#efe9db;cursor:pointer;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 
 /* ---------- sidebar ---------- */
 .side{background:var(--paper);border-left:1px solid var(--line);overflow-y:auto;max-height:100vh}
@@ -137,7 +137,8 @@ h2.panel-title{font-size:12px;font-family:"IBM Plex Mono",monospace;text-transfo
 .critbig .v{font-family:"IBM Plex Mono",monospace;font-size:34px;font-weight:500;line-height:1}
 .critbig .u{font-size:11px;color:var(--ink-soft)}
 
-.stackbar{height:10px;border-radius:5px;overflow:hidden;display:flex;background:var(--surface-2);margin:10px 0 6px;border:1px solid var(--line)}
+.stackbar{height:10px;border-radius:5px;overflow:hidden;background:var(--surface-2);margin:10px 0 6px;border:1px solid var(--line)}
+.stackbar .stackfill{height:100%;display:flex}
 .stackbar .seg{height:100%}
 .stackleg{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-soft);margin-bottom:18px}
 .stackleg span b{color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:500}
@@ -164,7 +165,6 @@ h2.panel-title{font-size:12px;font-family:"IBM Plex Mono",monospace;text-transfo
   <div class="mapwrap" id="mapwrap">
     <div id="map"></div>
     <div class="veil"></div>
-    <button class="themebtn" id="themebtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
     <div class="mapheader">
       <span class="eyebrow">Dhaulagiri Region · Nepal</span>
       <h1>Road Criticality</h1>
@@ -178,6 +178,7 @@ h2.panel-title{font-size:12px;font-family:"IBM Plex Mono",monospace;text-transfo
       <button id="zin" aria-label="Zoom in">+</button>
       <button id="zout" aria-label="Zoom out">–</button>
       <button id="zreset" aria-label="Reset view" style="font-size:12px">⤾</button>
+      <button class="themebtn" id="themebtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
     </div>
   </div>
 
@@ -442,6 +443,7 @@ segtoggle.addEventListener('click', (ev)=>{
 // ---------- selection + detail panel ----------
 const maxMulti = Math.max(...ROADS.map(x=>x.multi));
 const maxCent = Math.max(...ROADS.map(x=>x.cent)) || 1;
+const maxCrit = Math.max(...ROADS.map(x=>x.crit)) || 1;
 let selectedId = null;
 // source: 'map' (clicked a road) or 'list' (clicked a rank row) - the side
 // that *triggered* the selection doesn't need to also re-sync itself
@@ -462,14 +464,17 @@ function select(id, source){
   if(source !== 'list') focusListRow(id);
 
   const hzShare = r.hz + r.sf > 0 ? (r.hz/(r.hz+r.sf))*100 : 50;
+  const critFill = Math.max(r.crit > 0 ? 3 : 0, Math.min(100, (r.crit/maxCrit)*100));
   const detail = document.getElementById('detailbody');
   detail.innerHTML = `
     <div class="detail-name">${r.name || (r.hw.charAt(0).toUpperCase()+r.hw.slice(1)+' Segment')}</div>
     <div class="detail-meta"><span>${r.hw}</span><span>${r.len ? Math.round(r.len)+' m' : '–'}</span><span>ID ${r.id}</span></div>
-    <div class="critbig"><span class="v" style="color:${colorOf(r.crit)}">${r.crit.toFixed(2)}</span><span class="u">criticality</span></div>
+    <div class="critbig"><span class="v" style="color:${colorOf(r.crit)}">${r.crit.toFixed(2)}</span><span class="u">criticality · ${Math.round(critFill)}% of max</span></div>
     <div class="stackbar">
-      <div class="seg" style="width:${hzShare}%;background:#c05a3a"></div>
-      <div class="seg" style="width:${100-hzShare}%;background:#3d6b63"></div>
+      <div class="stackfill" style="width:${critFill}%">
+        <div class="seg" style="width:${hzShare}%;background:#c05a3a"></div>
+        <div class="seg" style="width:${100-hzShare}%;background:#3d6b63"></div>
+      </div>
     </div>
     <div class="stackleg"><span>Hazard <b>${r.hz.toFixed(2)}</b></span><span>Socioeconomic <b>${r.sf.toFixed(2)}</b></span></div>
 
