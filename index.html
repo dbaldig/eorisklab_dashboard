@@ -340,7 +340,7 @@ const streetsLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/
 // shouldn't show a pointer cursor that implies one.
 const boundariesHalo = L.geoJSON(BOUNDARIES, {
   interactive: false,
-  style: { color: '#0b0a08', weight: 5, opacity: 0.55 },
+  style: { color: '#0b0a08', weight: 5, opacity: 0.55, fill: false },
 });
 const boundariesLayer = L.geoJSON(BOUNDARIES, {
   interactive: false,
